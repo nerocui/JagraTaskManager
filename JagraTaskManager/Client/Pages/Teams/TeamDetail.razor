@@ -1,0 +1,60 @@
+@page "/teams/detail/{TeamId}"
+@attribute [Authorize]
+@inject ITeamRepository teamRepo
+@inject ITicketRepository ticketRepo
+
+<div>
+    @if (_loading)
+    {
+        <div>
+            loading...
+        </div>
+    }
+    else
+    {
+        <div>
+            <h3>@_team.Name</h3>
+            <TicketList Tickets="_tickets" />
+            <EditForm Model="@ticketForCreationDto" OnValidSubmit="@CreateTicket">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <InputText placeholder="Enter a title....." type="text" @bind-Value="ticketForCreationDto.Title" />
+                <InputText placeholder="Enter a description....." type="text" @bind-Value="ticketForCreationDto.Description" />
+                <InputSelect @bind-Value="ticketForCreationDto.AssigneeId">
+                    <option value="">Select assignee ...</option>
+                    @foreach (var user in _team.Users)
+                    {
+                        <option value="@user.Id">@user.FirstName</option>
+                    }
+                </InputSelect>
+                <button type="submit">Create</button>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string TeamId { get; set; }
+    private TeamForListDto _team;
+    private bool _loading = true;
+    private TicketForCreationDto ticketForCreationDto = new TicketForCreationDto();
+    private List<TicketForListDto> _tickets = new List<TicketForListDto>();
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        _team = await teamRepo.GetTeam(TeamId);
+        _tickets = await ticketRepo.GetTicketsByTeam(TeamId);
+        StateHasChanged();
+        _loading = false;
+    }
+
+    private async void CreateTicket()
+    {
+        ticketForCreationDto.TeamId = TeamId;
+        var ticket = await ticketRepo.CreateTicket(ticketForCreationDto);
+        _tickets.Add(ticket);
+        ticketForCreationDto = new TicketForCreationDto();
+        StateHasChanged();
+    }
+}

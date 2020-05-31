@@ -1,0 +1,38 @@
+@page "/invitations/all"
+@attribute [Authorize]
+@inject IInvitationRepository repo
+
+<div>
+    @if (_loading)
+    {
+        <div>loading...</div>
+    }
+    else
+    {
+        <div>
+            @foreach (var invitation in _invitations)
+            {
+                <div>
+                    @invitation.OrganizationName
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code
+{
+    private List<InvitationForListDto> _invitations = new List<InvitationForListDto>();
+    private bool _loading = false;
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        var invitations = await repo.GetInvitationByUser();
+        foreach (var item in invitations)
+        {
+            _invitations.Add(item);
+        }
+        _loading = false;
+        StateHasChanged();
+    }
+}

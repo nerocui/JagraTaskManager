@@ -1,0 +1,46 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+
+<div class="nav-bar">
+    <div>
+        <div class="nav-bar-menu">
+            @foreach (var item in _navItems)
+            {
+                <NavItem ViewModel="@item" />
+            }
+        </div>
+    </div>
+    <div>
+        <div class="nav-bar-auth">
+            <AuthorizeView>
+                <Authorized>
+                    <a href="authentication/profile">Hello, @context.User.Identity.Name</a>
+                    <button class="btn-logout" @onclick="BeginSignOut">Log out</button>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<NavItemViewModel> _navItems = new List<NavItemViewModel>();
+    protected override void OnInitialized()
+    {
+        var homeNavItem = new NavItemViewModel { Title = "Home", Link = "dashboard", Icon = "fas fa-home" };
+        var invitationNavItem = new NavItemViewModel { Title = "Invitations", Link = "invitations/all", Icon = "fas fa-envelope" };
+        var organizationItem = new NavItemViewModel { Title = "Organization", Icon = "fas fa-sitemap" };
+        var allOrganizations = new NavItemViewModel { Title = "All Organizations", Link = "organizations/all" };
+        organizationItem.Children.Add(allOrganizations);
+        _navItems.Add(homeNavItem);
+        _navItems.Add(organizationItem);
+        _navItems.Add(invitationNavItem);
+    }
+    private async Task BeginSignOut(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+}

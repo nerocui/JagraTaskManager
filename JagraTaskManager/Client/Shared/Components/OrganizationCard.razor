@@ -1,0 +1,15 @@
+﻿@inject NavigationManager navigationManager
+
+<div class="organization-card" @onclick="NavigateToDetail">
+    <h3>@Organization.Name</h3>
+    <h3>@Organization.Users.Count</h3>
+</div>
+
+@code {
+    [Parameter]
+    public OrganizationForListDto Organization { get; set; }
+    private void NavigateToDetail()
+    {
+        navigationManager.NavigateTo($"/organizations/detail/{Organization.Id}");
+    }
+}

@@ -1,0 +1,21 @@
+@inject NavigationManager NavigationManager
+
+<div class="ticket-list">
+    @foreach (var ticket in Tickets)
+    {
+        <div class="ticket-card" @onclick="() => NavigateToDetail(ticket.Id)">
+            <h4>
+                @ticket.Title
+            </h4>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<TicketForListDto> Tickets { get; set; }
+    private void NavigateToDetail(string ticketId)
+    {
+        NavigationManager.NavigateTo($"/tickets/detail/{ticketId}");
+    }
+}

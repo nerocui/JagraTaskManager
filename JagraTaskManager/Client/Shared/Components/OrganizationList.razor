@@ -1,0 +1,11 @@
+﻿<div class="organization-list">
+    @foreach (var org in Organizations)
+    {
+        <OrganizationCard Organization="org" />
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<OrganizationForListDto> Organizations { get; set; }
+}

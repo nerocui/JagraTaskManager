@@ -1,0 +1,47 @@
+﻿@page "/organizations/all"
+@attribute [Authorize]
+@inject IOrganizationRepository repo
+
+<div>
+    <div>
+        @if (_loading && _orgs.Count == 0)
+        {
+            <div>loading...</div>
+        }
+        else if (!_loading && _orgs.Count == 0)
+        {
+            <div>No org</div>
+        }
+        <OrganizationList Organizations="_orgs" />
+    </div>
+    
+
+    <EditForm Model="@organizationForCreationDto" OnValidSubmit="@CreateOrg">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <InputText placeholder="Enter a name....." type="text" @bind-Value="organizationForCreationDto.Name" />
+        <button type="submit">Create</button>
+    </EditForm>
+</div>
+
+@code {
+    private bool _loading = true;
+    private List<OrganizationForListDto> _orgs = new List<OrganizationForListDto>();
+
+    private OrganizationForCreationDto organizationForCreationDto = new OrganizationForCreationDto();
+
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        _orgs = await repo.GetOrganizations();
+        _loading = false;
+    }
+
+    private async void CreateOrg()
+    {
+        var org = await repo.CreateOrganization(organizationForCreationDto);
+        _orgs = await repo.GetOrganizations();
+        organizationForCreationDto = new OrganizationForCreationDto();
+        StateHasChanged();
+    }
+}

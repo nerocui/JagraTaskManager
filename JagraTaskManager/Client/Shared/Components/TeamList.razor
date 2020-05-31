@@ -1,0 +1,21 @@
+@inject NavigationManager NavigationManager
+
+<div class="team-list">
+    @foreach (var team in Teams)
+    {
+        <div class="team-card" @onclick="() => NavigateToDetail(team.Id)">
+            <h4>
+                @team.Name
+            </h4>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<TeamForListDto> Teams { get; set; }
+    private void NavigateToDetail(string teamId)
+    {
+        NavigationManager.NavigateTo($"/teams/detail/{teamId}");
+    }
+}

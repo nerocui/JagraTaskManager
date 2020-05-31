@@ -1,0 +1,31 @@
+@page "/teams/all"
+@attribute [Authorize]
+@inject ITeamRepository repo
+
+<div>
+    @if (_loading)
+    {
+        <div>loading...</div>
+    }
+    else
+    {
+        <div>
+            @foreach (var team in _teams)
+            {
+                <div>@team.Name</div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<TeamForListDto> _teams = new List<TeamForListDto>();
+    private bool _loading = true;
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        _teams = await repo.GetByUser();
+        _loading = false;
+    }
+}

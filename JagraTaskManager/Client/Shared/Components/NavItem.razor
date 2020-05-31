@@ -1,0 +1,63 @@
+﻿@inject NavigationManager navigationManager
+
+<div class="nav-item" @onblur="OnBlur" tabindex="0">
+    @if (ViewModel.Children.Count != 0)
+    {
+        <a @onclick="ExpandChildren">
+            @if (!string.IsNullOrEmpty(ViewModel.Icon))
+            {
+                <i class="@ViewModel.Icon"></i>
+            }
+            @ViewModel.Title
+        </a>
+    }
+    else
+    {
+        <a href="@ViewModel.Link">
+            @if (!string.IsNullOrEmpty(ViewModel.Icon))
+            {
+                <i class="@ViewModel.Icon"></i>
+            }
+
+            @ViewModel.Title
+        </a>
+    }
+
+    @if (_showChildren)
+    {
+        <div class="nav-sub-menu">
+            <ul>
+                @foreach (var item in ViewModel.Children)
+                {
+                    <li>
+                        <a @onclick="() => NavigateTo(item)">@item.Title</a>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public NavItemViewModel ViewModel { get; set; }
+
+    private bool _showChildren = false;
+
+    private void ExpandChildren()
+    {
+        if (ViewModel.Children.Count != 0)
+            _showChildren = !_showChildren;
+    }
+
+    private void OnBlur()
+    {
+        _showChildren = false;
+    }
+
+    private void NavigateTo(NavItemViewModel item)
+    {
+        navigationManager.NavigateTo(item.Link);
+        _showChildren = false;
+    }
+}

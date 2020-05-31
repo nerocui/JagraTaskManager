@@ -1,0 +1,70 @@
+@page "/tickets/detail/{TicketId}"
+@attribute [Authorize]
+@inject ITicketRepository ticketRepo
+@inject IUserRepository userRepo
+
+<div>
+    @if (_loading)
+    {
+        <div>
+            loading...
+        </div>
+    }
+    else
+    {
+        <div>
+            <h2>Title</h2>
+            <EditableText Text="@_ticket.Title" OnClick="ChangeTitle" Mode="text"/>
+            <h2>Description</h2>
+            <EditableText Text="@_ticket.Description" OnClick="ChangeTitle" Mode="textarea"/>
+            <EditForm Model="_ticket">
+                <InputSelect @bind-Value="_ticket.Assignee.Id" @onselectionchange="ChangeAssignee">
+                        <option value="">Select assignee ...</option>
+                        @foreach (var user in _users)
+                        {
+                            <option value="@user.Id">@user.FirstName</option>
+                        }
+                </InputSelect>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public string TicketId { get; set; }
+
+    private TicketForListDto _ticket;
+    private ICollection<UserForListDto> _users;
+    private bool _loading = true;
+
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        _ticket = await ticketRepo.GetTicket(TicketId);
+        _users = await userRepo.GetUsersByOrganization(_ticket.Organization.Id);
+        _loading = false;
+    }
+
+    private async void ChangeTitle(string title)
+    {
+        var tempTicket = (TicketForListDto)_ticket.Clone();
+        tempTicket.Title = title;
+        _ticket = await ticketRepo.UpdateTicketTitle(tempTicket);
+        StateHasChanged();
+    }
+    private async void ChangeDescription(string description)
+    {
+        var tempTicket = (TicketForListDto)_ticket.Clone();
+        tempTicket.Description = description;
+        _ticket = await ticketRepo.UpdateTicketDescription(tempTicket);
+        StateHasChanged();
+    }
+
+    private async void ChangeAssignee()
+    {
+        _ticket = await ticketRepo.UpdateTicketAssignee(_ticket);
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,61 @@
+<div class="editable-text">
+    @if (!_editing)
+    {
+        <div class="hover-edit" @onclick="Edit">
+            <p class="text-block">@EditableModel.Text</p>
+        </div>
+    }
+    else
+    {
+        <div class="editor">
+            <EditForm Model="EditableModel" OnSubmit="OnFormSubmit">
+                @if (Mode == "text")
+                {
+                    <InputText type="text" @bind-Value="EditableModel.Text"/>
+                }
+                else
+                {
+                    <InputTextArea type="text" @bind-Value="EditableModel.Text"/>
+                }
+            </EditForm>
+            <EditForm Model="EditableModel" OnSubmit="OnFormSubmit">
+                <button type="submit">Save</button>
+                <button type="button" @onclick="Cancel">Cancel</button>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code
+{
+    [Parameter]
+    public string Text { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnClick { get; set; }
+
+    [Parameter]
+    public string Mode { get; set; }
+
+    private EditableModel EditableModel = new EditableModel();
+    private bool _editing = false;
+    protected override void OnInitialized()
+    {
+        EditableModel.Text = Text;
+    }
+    private async Task OnFormSubmit()
+    {
+        await OnClick.InvokeAsync(EditableModel.Text);
+        _editing = false;
+    }
+
+    private void Edit()
+    {
+        _editing = true;
+    }
+
+    private void Cancel()
+    {
+        _editing = false;
+    }
+}

@@ -1,0 +1,115 @@
+@page "/organizations/detail/{OrganizationId}"
+@attribute [Authorize]
+@inject IOrganizationRepository repo
+@inject ITeamRepository teamsRepo
+@inject IUserRepository userRepo
+@inject IInvitationRepository invitationRepo
+
+<div>
+    @if (_loading)
+    {
+        <div>
+            loading...
+        </div>
+    }
+    else
+    {
+        <div>
+            @_org.Name
+        </div>
+    }
+    <TeamList Teams="_teams"/>
+    <EditForm Model="@teamForCreationDto" OnValidSubmit="@CreateTeam">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <InputText placeholder="Enter a name....." type="text" @bind-Value="teamForCreationDto.Name" />
+        <button type="submit">Create</button>
+    </EditForm>
+
+    <div>
+        <h4>Invite User</h4>
+        <EditForm Model="_searchTerm" OnSubmit="@SearchUser">
+            <InputText aria-placeholder="Enter an email to search..." type="text" @bind-Value="_searchTerm" />
+            <button type="submit">Search</button>
+        </EditForm>
+        <div>
+            @if (_searchResult != null)
+            {
+                <div class="user-invitation-card">
+                    <h4>@_searchResult.FirstName</h4>
+                    @if (_alreadyAMember)
+                    {
+                        <h4>Member</h4>
+                    }
+                    else if (_alreadyInvited)
+                    {
+                        <h4>Invited</h4>
+                    }
+                    else
+                    {
+                        <button @onclick="InviteUser">Invite</button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string OrganizationId { get; set; }
+    private OrganizationForListDto _org;
+    private bool _loading = true;
+    private TeamForCreationDto teamForCreationDto = new TeamForCreationDto();
+    private List<TeamForListDto> _teams = new List<TeamForListDto>();
+    private string _searchTerm = "";
+    private UserForListDto _searchResult;
+    private bool _alreadyAMember = false;
+    private bool _alreadyInvited = false;
+    protected async override Task OnInitializedAsync()
+    {
+        _loading = true;
+        _org = await repo.GetOrganization(OrganizationId);
+        _teams = await teamsRepo.GetByOrganization(OrganizationId);
+        _loading = false;
+    }
+    private async void CreateTeam()
+    {
+        teamForCreationDto.OrganizationId = OrganizationId;
+        var team = await teamsRepo.CreateTeam(teamForCreationDto);
+        teamForCreationDto = new TeamForCreationDto();
+        _teams.Add(team);
+        StateHasChanged();
+    }
+
+    private async void SearchUser()
+    {
+        _searchResult = await userRepo.SearchByEmail(_searchTerm);
+        if (_org.Users.Any(u => u.Email == _searchResult.Email))
+        {
+            _alreadyAMember = true;
+        }
+        else if (_org.Invitations.Any(i => i.Email == _searchResult.Email))
+        {
+            _alreadyInvited = true;
+        }
+        _searchTerm = "";
+        StateHasChanged();
+    }
+
+    private async void InviteUser()
+    {
+        await invitationRepo.CreateInvitation(new InvitationForCreationDto { OrganizationId = _org.Id, UserId = _searchResult.Id });
+        Console.WriteLine("Invitation sent");
+        _searchResult = await userRepo.SearchByEmail(_searchResult.Email);
+        if (_org.Users.Any(u => u.Email == _searchResult.Email))
+        {
+            _alreadyAMember = true;
+        }
+        else if (_org.Invitations.Any(i => i.Email == _searchResult.Email))
+        {
+            _alreadyInvited = true;
+        }
+        StateHasChanged();
+    }
+}
